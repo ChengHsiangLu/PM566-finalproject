@@ -436,11 +436,15 @@ knitr::kable(obesity_median_lo[1:5,], caption = "Top 5 lowest median of diabetes
 
 <br>
 
-(thoughts?)
+From these tables, Gary, in NE region, has both the highest median of diabetes_percentage(24.05%) and obesity_percentage(50.30%). On the other hand, Boulder, in NW region, has both the lowest median of diabetes_percentage(5.00%) and obesity_percentage(15.70%).
 
-
+<br>
 
 ## Boxplots {.tabset}
+
+```{r}
+merged$region <- factor(merged$region, levels=c("NE", "SE", "NW", "SW"))
+```
 
 ```{r p1_box}
 p1_box <- merged[!is.na(diabetes_percentage)][!is.na(region)] %>% 
@@ -488,16 +492,12 @@ p2_box
 
 ## {-}
 
-There is a highest diabetes_percentage almost 40% in NE region.
-
-In NE region, there is a max obesity_percentage occurred. However, SE region has the highest median of obesity_percentage.
-
-
-Among all cities, Gary, in NE region, has both the highest mean of diabetes_percentage(24.05%) and obesity_percentage(50.30%). On the other hand, Boulder, in NW region, has both the lowest mean of diabetes_percentage(5.00%) and obesity_percentage(15.70%).
-
 <br>
 
-And from the boxplot, NW region has the lowest median in diabetes_percentage and obesity_percentage.
+From the boxplot of diabetes percentage in different regions, there is a max diabetes percentage in the NE region, and the NE region and the SE region have a similar median diabetes percentage. The NW region has the lowest median diabetes percentage. In this plot, the east-side regions' median diabetes percentage is higher than the west-side regions'.
+
+From the boxplot of obesity percentage in different regions, the east-side regions' median obesity percentage is also higher than the west-side regions'. Among all regions, the SE region has the highest median obesity percentage and the SW region has the lowest median obesity percentage.
+
 
 # **Conclusion**
 
