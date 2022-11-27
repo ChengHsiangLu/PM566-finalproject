@@ -514,9 +514,6 @@ We can see that there is a positive correlation between obesity and diabetes rat
 ### Leaflet
 From the leaflet, cities closer to Downtown LA have higher rates of diabetes in orange color. Similar to the result of diabetes percentage, the region near downtown LA shows orange color dots as well.
 
-### Histogram
-From histograms, the NE region has higher counts of diabetes_percentage. We can also see that the NE region has higher counts of obesity_percentage as well. However, all results from histograms might be affected by different numbers and sizes of cities in different regions.
-
 ### Boxplot
 There is the highest diabetes_percentage in the NE region(almost 40%). However, the SE region has the highest median of obesity_percentage. The NW region has both the lowest median in diabetes_percentage and obesity_percentage.
 
@@ -569,3 +566,5 @@ we can see that NE region has higher counts of obesity_percentage as well. Howev
 
 <br>
 
+### Histogram
+From histograms, the NE region has higher counts of diabetes_percentage. We can also see that the NE region has higher counts of obesity_percentage as well. However, all results from histograms might be affected by different numbers and sizes of cities in different regions.
