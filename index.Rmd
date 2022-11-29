@@ -1,8 +1,9 @@
 ---
 title: "PM566 Final Project"
 author: "Sam (Cheng-Hsiang) Lu"
+date: "`r Sys.Date()`"
 output: 
-    html_document:
+      html_document:
         toc: TRUE
         toc_float: TRUE
 ---
@@ -11,7 +12,7 @@ output:
 
 # **Introduction**
 
-These two datasets are about "diagnosed diabetes among adults aged >=18 years" and "Obesity among adults aged >=18 years" in 2017 from the CDC. They include estimates for the 500 largest US cities and approximately 28,000 census tracts within these cities.
+I download two datasets which are talking about "diagnosed diabetes among adults aged >=18 years" and "Obesity among adults aged >=18 years" in the US in 2017 from the CDC. They include estimates for the 500 largest US cities and approximately 28,000 census tracts within these cities. I also download one dataset which is the "Prevalence of Self-Reported Physical Inactivity Among US Adults by State and Territory, 2017–2020".
 
 <br>
 
@@ -46,13 +47,13 @@ opts_chunk$set(
 
 ## Read in the data by API
 
-I used API method to obtain my datasets from CDC. First, you have to create an account with password. Then, you have to apply for a free app token. Last, copy your API Endpoint. Here are my datasets links:
+I used API method to obtain my datasets from CDC. First, you have to create an account with password. Then, you have to apply for a free app token. Last, copy your API Endpoint. Both datasets contain 27 columns and 29,006 rows. 
+
+Here are my datasets links:
 `https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Obesity-among-adults-aged-18-years/bjvu-3y7d`
 `https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Diagnosed-diabetes-among-adults-aged-18/cn78-b9bj`
 
-<br>
-
-```{r API_dia, cashe=TRUE}
+```{r API_dia, message=FALSE, echo=FALSE, warning=FALSE}
 dia <- read.socrata(
   "https://chronicdata.cdc.gov/resource/cn78-b9bj.json?year=2017",
   app_token = "bEkVW73ASzmTkZ9riAtf2YS5c",
@@ -63,7 +64,7 @@ dia <- as.data.table(dia)
 write.csv(dia,"dia.csv", row.names = F)
 ```
 
-```{r API_obe, cashe=TRUE}
+```{r API_obe, message=FALSE, echo=FALSE, warning=FALSE}
 obe <- read.socrata(
   "https://chronicdata.cdc.gov/resource/bjvu-3y7d.json?year=2017",
   app_token = "bEkVW73ASzmTkZ9riAtf2YS5c",
@@ -74,33 +75,41 @@ obe <- as.data.table(obe)
 write.csv(obe,"obe.csv", row.names = F)
 ```
 
-Both datasets contain 27 columns and 29,006 rows.
+<br>
 
+The Physical Inactivity dataset contains 3 columns and 53 rows. 
+
+This is the URL to download it:
+`https://www.cdc.gov/physicalactivity/data/inactivity-prevalence-maps/tables/2020/1-self-reported.csv`
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
-#dim(dia)
-#dim(obe)
-#str(dia)
-#str(obe)
+if (!file.exists("1-self-reported.csv"))
+  download.file(
+    url = "https://www.cdc.gov/physicalactivity/data/inactivity-prevalence-maps/tables/2020/1-self-reported.csv",
+    destfile = "1-self-reported.csv",
+    method   = "libcurl",
+    timeout  = 60
+  )
+physical_inactivity <- fread("1-self-reported.csv")
 ```
 
 <br>
 
 ## Select columns
 
-I select **data_value, populationcount, stateabbr, statedesc(state name), city_name, geolocation.latitude, and geolocation.longitude** total 7 columns.
+From CDC datasets, I select **data_value(%), populationCount, stateabbr, statedesc(state name), city_name, geolocation.latitude, and geolocation.longitude** total 7 columns. From the Physical Inactivity dataset, I select **state and prevalence** 2 columns.
 
-```{r}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 dia_mini <- dia[, c(2, 3, 14, 17, 19, 20, 23)]
 obe_mini <- obe[, c(2, 3, 14, 17, 19, 20, 23)]
+ph_inact <- physical_inactivity[, c(1, 2)]
 ```
 
 <br>
 
-## Change column names
+## Change column names and state names
+I change my column names in order to easily understand. 
 
-Then I change my column names in order to easily understand.
-
-```{r}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 colnames(dia_mini)[1] <- "diabetes_percentage"
 colnames(dia_mini)[2] <- "populationCount"
 colnames(dia_mini)[3] <- "state_abbr"
@@ -116,16 +125,43 @@ colnames(obe_mini)[4] <- "state_name"
 colnames(obe_mini)[5] <- "city_name"
 colnames(obe_mini)[6] <- "lat"
 colnames(obe_mini)[7] <- "lon"
+
+colnames(ph_inact)[1] <- "state_name"
+colnames(ph_inact)[2] <- "physical_inactivity_prevalence"
+```
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+ph_inact$state_name <- gsub("DC", "District of C", ph_inact$state_name)
+ph_inact$state_name <- gsub("NewHampshire", "New Hampshire", ph_inact$state_name)
+ph_inact$state_name <- gsub("NewJersey", "New Jersey", ph_inact$state_name)
+ph_inact$state_name <- gsub("NewMexico", "New Mexico", ph_inact$state_name)
+ph_inact$state_name <- gsub("NewYork", "New York", ph_inact$state_name)
+ph_inact$state_name <- gsub("NorthCarolina", "North Carolin", ph_inact$state_name)
+ph_inact$state_name <- gsub("NorthDakota", "North Dakota", ph_inact$state_name)
+ph_inact$state_name <- gsub("RhodeIsland", "Rhode Island", ph_inact$state_name)
+ph_inact$state_name <- gsub("SouthCarolina", "South Carolin", ph_inact$state_name)
+ph_inact$state_name <- gsub("SouthDakota", "South Dakota", ph_inact$state_name)
+ph_inact$state_name <- gsub("WestVirginia", "West Virginia", ph_inact$state_name)
+```
+
+<br>
+
+## Remove non-numeric value
+
+This step, I remove the physical inactivity prevalence non-numeric value in the Physical Inactivity dataset.
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+ph_inact <- ph_inact[!is.na(as.numeric(ph_inact$physical_inactivity_prevalence)), ]
 ```
 
 <br>
 
 ## Merge two datasets
 
-Merge two datasets by **state_abbr, populationCount, state_name, city_name, lat, and lon**. 
+Merge CDC two datasets by **state_abbr, populationCount, state_name, city_name, lat, and lon**. Then I merge the Physical Inactivity dataset with them.
 
-```{r merge-datatables}
-merged <- 
+```{r merge-datatables, message=FALSE, echo=FALSE, warning=FALSE}
+merged_1 <- 
   merge(
   # Data
   x     = dia_mini,      
@@ -135,21 +171,34 @@ merged <-
   # keep everything!
   all.x = TRUE     
   ) 
-
-dim(merged)
 ```
 
-<br>
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+merged <- 
+  merge(
+    # Data
+    x     = merged_1,      
+    y     = ph_inact, 
+    # List of variables to match
+    by = c("state_name"),
+    # keep everything!
+    all.x = TRUE     
+  ) 
+```
 
 ## Remove duplicates
 
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+dim(merged)
+```
+
 My row number increased to 30,008 so I have to remove duplicates.
 
-```{r}
-merged[, n := 1:.N, by = .(state_abbr, state_name, city_name, lat, lon)]
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+merged[, n := 1:.N, by = .(state_abbr, state_name, city_name, lat, lon, physical_inactivity_prevalence)]
 merged <- merged[n == 1,][, n := NULL]
 
-length(unique(merged$lat))
+dim(merged)
 ```
 
 After removing duplicates, my rows shrink from 30,008 to 28,505.
@@ -158,39 +207,39 @@ After removing duplicates, my rows shrink from 30,008 to 28,505.
 
 ## Convert chr into num
 
+In this step, I just want to convert character variables into numeric variables.
+
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 #str(merged)
 ```
-
-```{r}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 merged$lat <- as.numeric(merged$lat)
 merged$lon <- as.numeric(merged$lon)
 merged$diabetes_percentage <- as.numeric(merged$diabetes_percentage)
 merged$populationCount <- as.numeric(merged$populationCount)
 merged$obesity_percentage <- as.numeric(merged$obesity_percentage)
+merged$physical_inactivity_prevalence <- as.numeric(merged$physical_inactivity_prevalence)
 ```
 
 <br>
 
 ## Check NAs
 
+There are only 2.7% NAs in my dataset which are not significant. Therefore, I'm going to remove NA values
+
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 #summary(merged$diabetes_percentage)
 #summary(merged$obesity_percentage)
 ```
 
-```{r}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 mean(is.na(merged$diabetes_percentage))
 mean(is.na(merged$obesity_percentage))
 ```
 
-There are only 2.7% NAs in my dataset which are not significant. Therefore, I'm going to replace NA values with mean.
-
-<br>
-
-```{r}
-merged[, diabetes_percentage := fcoalesce(diabetes_percentage, mean(diabetes_percentage, na.rm = TRUE))]
-merged[, obesity_percentage := fcoalesce(obesity_percentage, mean(obesity_percentage, na.rm = TRUE))]
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+merged <-merged[!is.na(merged$diabetes_percentage),]
+merged <-merged[!is.na(merged$obesity_percentage),]
 ```
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
@@ -204,7 +253,7 @@ merged[, obesity_percentage := fcoalesce(obesity_percentage, mean(obesity_percen
 
 I create a new column contain Northeast, Northwest, Southwest, and Southeast four different regions
 
-```{r}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 # Add regions
 merged[, region := fifelse(lon >= -98 & lat > 39.71, "NE",
                 fifelse(lon < -98 & lat > 39.71, "NW",
@@ -217,98 +266,13 @@ merged[, region := fifelse(lon >= -98 & lat > 39.71, "NE",
 
 # **Results**
 
-## Scatter plots {.tabset}
-
-By using scatter plots, I can see whether there is a correlation between obesity percentage and diabetes percentage.
-
-```{r p1_scatter}
-#All states
-p1_scatter <- merged %>% 
-  plot_ly(x = ~obesity_percentage, y= ~diabetes_percentage,
-        type = 'scatter', mode = 'markers', color = ~state_abbr,
-        hoverinfo = 'text',
-        text = ~paste( paste(state_name, ":", sep=""),
-                       paste(city_name, ":", sep=""),
-                       paste(" Obesity percentage: ", obesity_percentage, sep=""), 
-                       paste(" Diabetes percentage: ", diabetes_percentage, sep=""), 
-                       sep = "<br>")) %>%
-  layout(title = "Obesity percentage vs. Diabetes percentage with all cities",
-         xaxis = list(title = "Obesity percentage"), 
-         yaxis = list(title = "Diabetes percentage"),
-         hovermode = "compare")
-```
-
-```{r p2_scatter}
-#Different regions
-p2_scatter <- merged[!is.na(region)] %>%
-  plot_ly(x = ~obesity_percentage, y= ~diabetes_percentage, 
-          type = 'scatter', mode = 'markers', color = ~region,
-          hoverinfo = 'text',
-          text = ~paste( paste(state_name, ":", sep=""),
-                         paste(city_name, ":", sep=""),
-                         paste(region, ":", sep=""),
-                         paste(" Obesity percentage: ", obesity_percentage, sep=""), 
-                         paste(" Diabetes percentage: ", diabetes_percentage, sep=""), 
-                         sep = "<br>")) %>%
-  layout(title = "Obesity percentage vs. Diabetes percentage in different regions",
-         xaxis = list(title = "Obesity percentage"), 
-         yaxis = list(title = "Diabetes percentage"),
-         hovermode = "compare")
-
-```
-
-```{r p3_scatter}
-#Cities in CA
-p3_scatter <- merged[state_abbr == "CA"] %>% 
-  plot_ly(x = ~obesity_percentage, y= ~diabetes_percentage,
-        type = 'scatter', mode = 'markers', color = ~city_name,
-        hoverinfo = 'text',
-        text = ~paste( paste(state_name, ":", sep=""),
-                       paste(city_name, ":", sep=""),
-                       paste(" Obesity percentage: ", obesity_percentage, sep=""), 
-                       paste(" Diabetes percentage: ", diabetes_percentage, sep=""), 
-                       sep = "<br>")) %>%
-  layout(title = "Obesity percentage vs. Diabetes percentage in CA",
-         xaxis = list(title = "Obesity percentage"), 
-         yaxis = list(title = "Diabetes percentage"),
-         hovermode = "compare")
-```
-
-### All states
-
-```{r echo=FALSE}
-p1_scatter
-```
-
-### Different regions
-
-```{r echo=FALSE}
-p2_scatter
-```
-
-### Cities in CA
-
-```{r echo=FALSE}
-p3_scatter
-```
-
-## {-}
-
-From the scatter plot with all states in the US, we can see that there is a positive correlation between obesity and diabetes rates in different states and so as in different regions.
-
-<br>
-
-
-
 ## Leaflet {.tabset}
 
-First, create a color palette so we can see the severity of each place.
-
-```{r pal_dia}
+```{r pal_dia, message=FALSE, echo=FALSE, warning=FALSE}
 pal_dia <- colorNumeric(c('darkblue','goldenrod','darkred'), domain=merged$diabetes_percentage)
 ```
 
-```{r p1_leaflet}
+```{r p1_leaflet, message=FALSE, echo=FALSE, warning=FALSE}
 # Diabetes percentage in the US
 p1_leaflet <- leaflet() %>%
   addProviderTiles('OpenStreetMap') %>% 
@@ -321,28 +285,15 @@ p1_leaflet <- leaflet() %>%
              title='Diabetes percentage', opacity=1)
 ```
 
-```{r p2_leaflet}
-# Diabetes percentage in LA
-p2_leaflet <- leaflet() %>%
-  addProviderTiles('OpenStreetMap') %>% 
-  addCircles(data = merged[merged$city_name == "Los Angeles"],
-             lat=~lat,lng=~lon,
-             label = ~paste0(round(diabetes_percentage,2)), color = ~ pal_dia(diabetes_percentage),
-             opacity = 0.5, fillOpacity = 1, radius = 50) %>%
-  # Legend
-  addLegend('bottomleft', pal=pal_dia, values=merged$diabetes_percentage,
-             title='Diabetes percentage', opacity=1)
-```
-
-```{r pal_obe}
+```{r pal_obe, message=FALSE, echo=FALSE, warning=FALSE}
 pal_obe <- colorNumeric(c('darkblue','goldenrod','darkred'), domain=merged$obesity_percentage)
 ```
 
-```{r p3_leaflet}
-# Obesity percentage in LA
-p3_leaflet <- leaflet() %>%
+```{r p2_leaflet, message=FALSE, echo=FALSE, warning=FALSE}
+# Obesity percentage in the US
+p2_leaflet <- leaflet() %>%
   addProviderTiles('OpenStreetMap') %>% 
-  addCircles(data = merged[merged$city_name == "Los Angeles"],
+  addCircles(data = merged,
              lat=~lat,lng=~lon,
              label = ~paste0(round(obesity_percentage,2)), color = ~ pal_obe(obesity_percentage),
              opacity = 0.5, fillOpacity = 1, radius = 50) %>%
@@ -353,107 +304,35 @@ p3_leaflet <- leaflet() %>%
 
 ### Diabetes percentage in the US
 
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
 p1_leaflet
 ```
 
-### Diabetes percentage in LA
+### Obesity percentage in the US
 
-```{r echo=FALSE}
+```{r echo=FALSE, message=FALSE, echo=FALSE, warning=FALSE}
 p2_leaflet
 ```
 
-### Obesity percentage in LA
-
-```{r echo=FALSE}
-p3_leaflet
-```
-
 ## {-}
-At my first glance, I see there are more orange dots in the NE region. From the second plot, dots closer to Downtown LA have higher rates of diabetes in orange color. Similar to the second plot, dots near downtown LA get more orange color than other places.
-
-<br>
-
-## Median, Max, Min, and length
-
-Show median, max, min, and length of diabetes_percentage and obesity_percentage columns in different cities
-
-### Top 5 highest median of diabetes percentage cities in the US
-
-```{r}
-# Show the top 5 highest median of diabetes percentage cities in the US
-diabetes_median_hi <- merged[, .(
-  diabetes_median = median(diabetes_percentage, na.rm = T),
-  diabetes_max = max(diabetes_percentage, na.rm = T),
-  diabetes_min = min(diabetes_percentage, na.rm = T),
-  diabetes_length = length(diabetes_percentage)
-), by=c("city_name", "state_name", "region")][order(-diabetes_median)]
-
-knitr::kable(diabetes_median_hi[1:5,], caption = "Top 5 highest median of diabetes percentage cities in the US")
-```
-
-### Top 5 highest median of obesity percentage cities in the US
-
-```{r}
-# Show the top 5 highest median of obesity percentage cities in the US
-obesity_median_hi <- merged[, .(
-  obesity_median = median(obesity_percentage, na.rm = T),
-  obesity_max = max(obesity_percentage, na.rm = T),
-  obesity_min = min(obesity_percentage, na.rm = T),
-  obesity_length = length(obesity_percentage)
-), by=c("city_name", "state_name", "region")][order(-obesity_median)]
-
-knitr::kable(obesity_median_hi[1:5,], caption = "Top 5 highest median of obesity percentage cities in the US")
-```
-
-### Top 5 lowest median of diabetes percentage cities in the US
-
-```{r}
-# Show the top 5 lowest median of diabetes percentage cities in the US
-diabetes_median_lo <- merged[, .(
-  diabetes_median = median(diabetes_percentage, na.rm = T),
-  diabetes_max = max(diabetes_percentage, na.rm = T),
-  diabetes_min = min(diabetes_percentage, na.rm = T),
-  diabetes_length = length(diabetes_percentage)
-), by=c("city_name", "state_name", "region")][order(diabetes_median)]
-
-knitr::kable(diabetes_median_lo[1:5,], caption = "Top 5 lowest median of diabetes percentage cities in the US")
-```
-
-### Top 5 lowest median of diabetes percentage cities in the US
-
-```{r}
-# Show the top 5 lowest median of obesity percentage cities in the US
-obesity_median_lo <- merged[, .(
-  obesity_median = median(obesity_percentage, na.rm = T),
-  obesity_max = max(obesity_percentage, na.rm = T),
-  obesity_min = min(obesity_percentage, na.rm = T),
-  obesity_length = length(obesity_percentage)
-), by=c("city_name", "state_name", "region")][order(obesity_median)]
-
-knitr::kable(obesity_median_lo[1:5,], caption = "Top 5 lowest median of diabetes percentage cities in the US")
-```
-
-<br>
-
-From these tables, Gary, in NE region, has both the highest median of diabetes_percentage(24.05%) and obesity_percentage(50.30%). On the other hand, Boulder, in NW region, has both the lowest median of diabetes_percentage(5.00%) and obesity_percentage(15.70%).
+From the Leaflet, the legend shows the degree of the diabetes percentage. The red color means higher percentage of diabetes. I see there are more orange dots in the NE region and SE region from the plot of diabetes percentage. From the second plot of obesity percentage, we can see that there are more orange dots on the east-side than on the west-side.
 
 <br>
 
 ## Boxplots {.tabset}
 
-```{r}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 merged$region <- factor(merged$region, levels=c("NE", "SE", "NW", "SW"))
 ```
 
-```{r p1_box}
+```{r p1_box, message=FALSE, echo=FALSE, warning=FALSE}
 p1_box <- merged[!is.na(diabetes_percentage)][!is.na(region)] %>% 
   plot_ly(x = ~region, y= ~diabetes_percentage,
         type = 'box', mode = 'markers', color = ~region,
         hoverinfo = 'text',
-        text = ~paste( paste(state_name, "-", sep=""),
-                       paste(region, "-", sep=""),
-                       paste(city_name, "-", sep=""),
+        text = ~paste( paste(" State name: ", state_name, sep=""),
+                       paste(" Region: ", region, sep=""),
+                       paste("City name: ", city_name, sep=""),
                        paste(" Diabetes percentage: ", diabetes_percentage, sep=""), 
                        sep = "<br>")) %>%
   layout(title = "Diabetes percentage in different regions",
@@ -462,14 +341,14 @@ p1_box <- merged[!is.na(diabetes_percentage)][!is.na(region)] %>%
          hovermode = "compare")
 ```
 
-```{r p2_box}
+```{r p2_box, message=FALSE, echo=FALSE, warning=FALSE}
 p2_box <- merged[!is.na(obesity_percentage)][!is.na(region)] %>% 
   plot_ly(x = ~region, y= ~obesity_percentage,
         type = 'box', mode = 'markers', color = ~region,
         hoverinfo = 'text',
-        text = ~paste( paste(state_name, "-", sep=""),
-                       paste(region, "-", sep=""),
-                       paste(city_name, "-", sep=""),
+        text = ~paste( paste(" State name: ", state_name, sep=""),
+                       paste(" Region: ", region, sep=""),
+                       paste("City name: ", city_name, sep=""),
                        paste(" Obesity percentage: ", obesity_percentage, sep=""), 
                        sep = "<br>")) %>%
   layout(title = "Obesity percentage in different regions",
@@ -480,91 +359,83 @@ p2_box <- merged[!is.na(obesity_percentage)][!is.na(region)] %>%
 
 ### Diabetes percentage
 
-```{r echo=FALSE}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 p1_box
 ```
 
 ### Obesity percentage
 
-```{r echo=FALSE}
+```{r message=FALSE, echo=FALSE, warning=FALSE}
 p2_box
 ```
 
 ## {-}
 
+Now, let see the boxplot, the x-axis shows 4 regions: Northeast, Southeast, Northwest, and Southwest. On the y-axis shows the percentage of diabetes or obesity.
+
+From the boxplot of diabetes percentage, there is a max diabetes percentage in the NE region, and the NE region and the SE region have a similar median diabetes percentage. The NW region has the lowest median diabetes percentage. In this plot, the east-side regions' median diabetes percentage is higher than the west-side regions'.
+
+From the boxplot of obesity percentage, the east-side regions' median obesity percentage is also higher than the west-side regions'. Among all regions, the SE region has the highest median obesity percentage and the SW region has the lowest median obesity percentage.
+
 <br>
 
-From the boxplot of diabetes percentage in different regions, there is a max diabetes percentage in the NE region, and the NE region and the SE region have a similar median diabetes percentage. The NW region has the lowest median diabetes percentage. In this plot, the east-side regions' median diabetes percentage is higher than the west-side regions'.
 
-From the boxplot of obesity percentage in different regions, the east-side regions' median obesity percentage is also higher than the west-side regions'. Among all regions, the SE region has the highest median obesity percentage and the SW region has the lowest median obesity percentage.
+
+## Scatter plots {.tabset}
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+merged_median <- merged[, .(
+    obe_median      = median(obesity_percentage, na.rm=TRUE),
+    dia_median      = median(diabetes_percentage, na.rm=TRUE),
+    physical_inactivity_prevalence = physical_inactivity_prevalence
+    ),
+    by = c("state_abbr", "state_name", "region")
+    ]
+```
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+merged_median_uni <- unique(merged_median)
+```
+
+```{r message=FALSE, echo=FALSE, warning=FALSE}
+scatter_p <- merged_median_uni %>% 
+  plot_ly(x = ~obe_median, y = ~dia_median,
+          type = 'scatter', mode = 'markers', color = ~state_abbr,
+          size = ~physical_inactivity_prevalence, sizes = c(5, 70), marker = list(sizemode='diameter', opacity=0.5),
+          hoverinfo = 'text',
+          text = ~paste( paste(state_name, ":", sep=""), 
+                  paste(" State_abbr: ", state_abbr, sep=""), 
+                  paste(" Region: ", region, sep=""), 
+                  paste(" Obesity percentage: ", obe_median, sep=""), 
+                  paste(" Diabetes percentage: ", dia_median, sep=""),
+                  paste(" Physical Inactivity Prevalence: ", physical_inactivity_prevalence, sep=""),
+                  sep = "<br>")) %>%
+  layout(title = "Obesity percentage vs. Diabetes percentage with Physical Inactivity Prevalence",
+         xaxis = list(title = "Obesity percentage"), 
+         yaxis = list(title = "Diabetes percentage"),
+         hovermode = "compare")
+
+scatter_p
+```
+
+In this scatter plot, I select each state's median of obesity percentage and diabetes percentage with their physical inactivity prevalence. We can see that there is a positive correlation between obesity and diabetes rates. We can also see the physical inactivity prevalence by the size of dots. I cannot tell the direct correlation with the obesity or diabetes rates. However, it looks like there are bigger dots on the top right corner and smaller dots on the bottom left corner.
+
+<br>
 
 
 # **Conclusion**
 
-## Question 1: Which city has the highest median rates of diabetes and obesity and which city lowest rates of diabetes and obesity?
+## Question 1: How are the distribution of diabetes and obesity percentages in the US?
 
-Among all cities, Gary, in NE region, has the highest median rates of diabetes(24.05%) and he highest median rates of  obesity(50.30%). On the other hand, Boulder, in NW region, has the lowest median rates of diabetes(5.00%) and the lowest median rates of obesity(15.70%).
+From the leaflet,  first we can see there are more orange dots on the NE and SE regions. From the box plot, the median of diabetes percentage looks equally high in the NE and SE regions. The median of obesity percentage looks higher in the SE region than in the NE region. Besides, we can also see there are higher diabetes and obesity percentages on the east-side than on the west-side.
 
-## Question 2: What is the correlation between diabetes and obesity in different region?
+## Question 2: Is there any correlation between diabetes and obesity? If so, is there any correlation with physical inactivity prevalence?
 
-We can see that there is a positive correlation between obesity and diabetes rates from the scatter plot by states, so as the scatter plot by regions. Apart from the result, we can also see that the data points in the Northwest are fewer than in other regions.
-
-## Question 3: Compare different regions diabetes_percentage and obesity_percentage with different plots(such as histograms ,boxplots, or leaflet).
-
-### Leaflet
-From the leaflet, cities closer to Downtown LA have higher rates of diabetes in orange color. Similar to the result of diabetes percentage, the region near downtown LA shows orange color dots as well.
-
-### Boxplot
-There is the highest diabetes_percentage in the NE region(almost 40%). However, the SE region has the highest median of obesity_percentage. The NW region has both the lowest median in diabetes_percentage and obesity_percentage.
-
-
-
-
-
-
-## Histogram??
-
-Compare diabetes_percentage in different regions.
-
-```{r p1_his}
-p1_his <- merged[!is.na(diabetes_percentage)][!is.na(region)] %>%
-  plot_ly(x= ~diabetes_percentage, 
-         type = 'histogram', mode = 'markers', color= ~region,
-         hoverinfo = 'text',
-         text = ~paste( paste(state_name, ":", sep=""),
-                       paste(city_name, ":", sep=""),
-                       paste(" Diabetes percentage: ", diabetes_percentage, sep=""), 
-                       sep = "<br>")) %>%
-  layout(title = "Diabetes percentage in different regions",
-         xaxis = list(title = "Diabetes percentage"), 
-         yaxis = list(title = "counts"),
-         hovermode = "compare")
-```
-
-From this histogram, we can see that NE region has higher counts of diabetes_percentage. However, it might be affected by different number and size of cities in different regions.
-
-```{r echo=FALSE}
-#table(merged$region)
-```
-
-```{r p2_his}
-p2_his <- merged[!is.na(obesity_percentage)][!is.na(region)] %>%
-  plot_ly(x= ~obesity_percentage, 
-         type = 'histogram', mode = 'markers', color= ~region,
-         hoverinfo = 'text',
-         text = ~paste( paste(state_name, ":", sep=""),
-                       paste(city_name, ":", sep=""),
-                       paste(" Obesity percentage: ", diabetes_percentage, sep=""), 
-                       sep = "<br>")) %>%
-  layout(title = "Obesity percentage in different regions",
-         xaxis = list(title = "Obesity percentage"), 
-         yaxis = list(title = "counts"),
-         hovermode = "compare")
-```
-
-we can see that NE region has higher counts of obesity_percentage as well. However, it might be also affected by different number and size of cities in different regions.
+From the scatter plot, we can see that there is a positive correlation between obesity and diabetes rates by states. As for the correlation with physical inactivity prevalence, I don't see a strong correlation with physical inactivity prevalence. However, I can tell that smaller dots are on the bottom left corner and bigger dots are on the top right corner.
 
 <br>
 
-### Histogram
-From histograms, the NE region has higher counts of diabetes_percentage. We can also see that the NE region has higher counts of obesity_percentage as well. However, all results from histograms might be affected by different numbers and sizes of cities in different regions.
+# **Discussion**
+
+I would like to add more variables to my dataset in order to make more interesting plots. For example, I want to add different years and time to check if there are any changes of diabetes and obesity percentages in each state. Adding each state's median income level , average education level, and so on, to see whether diabetes and obesity percentages would be affected by them.
+
