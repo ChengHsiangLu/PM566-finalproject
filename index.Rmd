@@ -11,7 +11,7 @@ output:
 
 <br>
 
-# **Introduction**
+# **Introduction** 
 
 In this project, I would like to see the correlation of diabetes and obesity with physical inactivity in the US in 2017. Thus, I download two datasets which are talking about "diagnosed diabetes among adults aged >=18 years" and "Obesity among adults aged >=18 years" in the US in 2017 from the CDC. They include estimates for the 500 largest US cities and approximately 28,000 census tracts within these cities. I also download one dataset which is the "Prevalence of Self-Reported Physical Inactivity Among US Adults by State and Territory, 2017–2020".
 
