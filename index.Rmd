@@ -1,18 +1,19 @@
 ---
-title: "PM566 Final Project"
+title: "The correlation of diabetes and obesity with physical inactivity in the US in 2017"
 author: "Sam (Cheng-Hsiang) Lu"
 date: "`r Sys.Date()`"
 output: 
-      html_document:
-        toc: TRUE
-        toc_float: TRUE
+        pdf_document: default
+        html_document:
+          toc: TRUE
+          toc_float: TRUE
 ---
 
 <br>
 
 # **Introduction**
 
-I download two datasets which are talking about "diagnosed diabetes among adults aged >=18 years" and "Obesity among adults aged >=18 years" in the US in 2017 from the CDC. They include estimates for the 500 largest US cities and approximately 28,000 census tracts within these cities. I also download one dataset which is the "Prevalence of Self-Reported Physical Inactivity Among US Adults by State and Territory, 2017–2020".
+In this project, I would like to see the correlation of diabetes and obesity with physical inactivity in the US in 2017. Thus, I download two datasets which are talking about "diagnosed diabetes among adults aged >=18 years" and "Obesity among adults aged >=18 years" in the US in 2017 from the CDC. They include estimates for the 500 largest US cities and approximately 28,000 census tracts within these cities. I also download one dataset which is the "Prevalence of Self-Reported Physical Inactivity Among US Adults by State and Territory, 2017–2020".
 
 <br>
 
@@ -50,7 +51,9 @@ opts_chunk$set(
 I used API method to obtain my datasets from CDC. First, you have to create an account with password. Then, you have to apply for a free app token. Last, copy your API Endpoint. Both datasets contain 27 columns and 29,006 rows. 
 
 Here are my datasets links:
+
 `https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Obesity-among-adults-aged-18-years/bjvu-3y7d`
+
 `https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Diagnosed-diabetes-among-adults-aged-18/cn78-b9bj`
 
 ```{r API_dia, message=FALSE, echo=FALSE, warning=FALSE}
@@ -80,6 +83,7 @@ write.csv(obe,"obe.csv", row.names = F)
 The Physical Inactivity dataset contains 3 columns and 53 rows. 
 
 This is the URL to download it:
+
 `https://www.cdc.gov/physicalactivity/data/inactivity-prevalence-maps/tables/2020/1-self-reported.csv`
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 if (!file.exists("1-self-reported.csv"))
@@ -106,8 +110,8 @@ ph_inact <- physical_inactivity[, c(1, 2)]
 
 <br>
 
-## Change column names and state names
-I change my column names in order to easily understand. 
+## Change column names
+I change my column names in order to easily understand. In diabetes and obesity datasets, I have  **diabetes_percentage/obesity_percentage, populationCount, state_abbr, state_name, city_name, lat, and lon**. In the physical inactivity dataset, I have **state_name and physical_inactivity_prevalence**.
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 colnames(dia_mini)[1] <- "diabetes_percentage"
@@ -207,7 +211,7 @@ After removing duplicates, my rows shrink from 30,008 to 28,505.
 
 ## Convert chr into num
 
-In this step, I just want to convert character variables into numeric variables.
+In this step, I just convert character variables into numeric variables.
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 #str(merged)
@@ -225,7 +229,7 @@ merged$physical_inactivity_prevalence <- as.numeric(merged$physical_inactivity_p
 
 ## Check NAs
 
-There are only 2.7% NAs in my dataset which are not significant. Therefore, I'm going to remove NA values
+In my merged dataset, there are only 2.7% NAs values in columns of **diabetes_percentage and obesity_percentage**. Therefore, I'm going to remove them.
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 #summary(merged$diabetes_percentage)
@@ -251,7 +255,7 @@ merged <-merged[!is.na(merged$obesity_percentage),]
 
 ## Add regions
 
-I create a new column contain Northeast, Northwest, Southwest, and Southeast four different regions
+Last, I create a new column contain Northeast, Northwest, Southwest, and Southeast four different regions.
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 # Add regions
