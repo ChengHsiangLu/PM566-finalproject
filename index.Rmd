@@ -52,9 +52,9 @@ I used API method to obtain my datasets from CDC. First, you have to create an a
 
 Here are my datasets links:
 
-`https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Obesity-among-adults-aged-18-years/bjvu-3y7d`
+[500 Cities: Obesity among adults aged >=18 years](https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Obesity-among-adults-aged-18-years/bjvu-3y7d)
 
-`https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Diagnosed-diabetes-among-adults-aged-18/cn78-b9bj`
+[500 Cities: Diagnosed diabetes among adults aged >=18 years](https://chronicdata.cdc.gov/500-Cities-Places/500-Cities-Diagnosed-diabetes-among-adults-aged-18/cn78-b9bj)
 
 ```{r API_dia, message=FALSE, echo=FALSE, warning=FALSE}
 dia <- read.socrata(
@@ -84,7 +84,12 @@ The Physical Inactivity dataset contains 3 columns and 53 rows.
 
 This is the URL to download it:
 
-`https://www.cdc.gov/physicalactivity/data/inactivity-prevalence-maps/tables/2020/1-self-reported.csv`
+[Prevalence of Self-Reported Physical Inactivity Among US Adults by State and Territory, 2017–2020](https://www.cdc.gov/physicalactivity/data/inactivity-prevalence-maps/tables/2020/1-self-reported.csv)
+
+<br>
+
+After downloading all datasets, I merge them, remove duplicates and NA values, and add regions which are Northeast, Northwest, Southwest, and Southeast.
+
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 if (!file.exists("1-self-reported.csv"))
   download.file(
@@ -97,24 +102,15 @@ physical_inactivity <- fread("1-self-reported.csv")
 write.csv(physical_inactivity,"./data/1-self-reported.csv", row.names = F)
 ```
 
-<br>
-
-## Select columns
-
-From CDC datasets, I select **data_value(%), populationCount, stateabbr, statedesc(state name), city_name, geolocation.latitude, and geolocation.longitude** total 7 columns. From the Physical Inactivity dataset, I select **state and prevalence** 2 columns.
-
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#select columns
 dia_mini <- dia[, c(2, 3, 14, 17, 19, 20, 23)]
 obe_mini <- obe[, c(2, 3, 14, 17, 19, 20, 23)]
 ph_inact <- physical_inactivity[, c(1, 2)]
 ```
 
-<br>
-
-## Change column names
-I change my column names in order to easily understand. In diabetes and obesity datasets, I have  **diabetes_percentage/obesity_percentage, populationCount, state_abbr, state_name, city_name, lat, and lon**. In the physical inactivity dataset, I have **state_name and physical_inactivity_prevalence**.
-
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#change column names
 colnames(dia_mini)[1] <- "diabetes_percentage"
 colnames(dia_mini)[2] <- "populationCount"
 colnames(dia_mini)[3] <- "state_abbr"
@@ -136,6 +132,7 @@ colnames(ph_inact)[2] <- "physical_inactivity_prevalence"
 ```
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#change state names
 ph_inact$state_name <- gsub("DC", "District of C", ph_inact$state_name)
 ph_inact$state_name <- gsub("NewHampshire", "New Hampshire", ph_inact$state_name)
 ph_inact$state_name <- gsub("NewJersey", "New Jersey", ph_inact$state_name)
@@ -149,23 +146,13 @@ ph_inact$state_name <- gsub("SouthDakota", "South Dakota", ph_inact$state_name)
 ph_inact$state_name <- gsub("WestVirginia", "West Virginia", ph_inact$state_name)
 ```
 
-<br>
-
-## Remove non-numeric value
-
-This step, I remove the physical inactivity prevalence non-numeric value in the Physical Inactivity dataset.
-
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#remove non-numeric variables
 ph_inact <- ph_inact[!is.na(as.numeric(ph_inact$physical_inactivity_prevalence)), ]
 ```
 
-<br>
-
-## Merge two datasets
-
-Merge CDC two datasets by **state_abbr, populationCount, state_name, city_name, lat, and lon**. Then I merge the Physical Inactivity dataset with them.
-
 ```{r merge-datatables, message=FALSE, echo=FALSE, warning=FALSE}
+# merge CDC data
 merged_1 <- 
   merge(
   # Data
@@ -179,6 +166,7 @@ merged_1 <-
 ```
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#merge Physical Inactivity dataset
 merged <- 
   merge(
     # Data
@@ -190,36 +178,25 @@ merged <-
     all.x = TRUE     
   ) 
 ```
- 
- <br>
- 
-## Remove duplicates
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
-dim(merged)
+#dim(merged)
 ```
 
-My row number increased to 30,008 so I have to remove duplicates.
-
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#remove duplicate
 merged[, n := 1:.N, by = .(state_abbr, state_name, city_name, lat, lon, physical_inactivity_prevalence)]
 merged <- merged[n == 1,][, n := NULL]
 
-dim(merged)
+#dim(merged)
 ```
-
-After removing duplicates, my rows shrink from 30,008 to 28,505.
-
-<br>
-
-## Convert chr into num
-
-In this step, I just convert character variables into numeric variables.
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 #str(merged)
 ```
+
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#convert chr into num
 merged$lat <- as.numeric(merged$lat)
 merged$lon <- as.numeric(merged$lon)
 merged$diabetes_percentage <- as.numeric(merged$diabetes_percentage)
@@ -228,23 +205,18 @@ merged$obesity_percentage <- as.numeric(merged$obesity_percentage)
 merged$physical_inactivity_prevalence <- as.numeric(merged$physical_inactivity_prevalence)
 ```
 
-<br>
-
-## Check NAs
-
-In my merged dataset, there are only 2.7% NAs values in columns of **diabetes_percentage and obesity_percentage**. Therefore, I'm going to remove them.
-
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 #summary(merged$diabetes_percentage)
 #summary(merged$obesity_percentage)
 ```
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
-mean(is.na(merged$diabetes_percentage))
-mean(is.na(merged$obesity_percentage))
+#mean(is.na(merged$diabetes_percentage))
+#mean(is.na(merged$obesity_percentage))
 ```
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
+#remove NAs
 merged <-merged[!is.na(merged$diabetes_percentage),]
 merged <-merged[!is.na(merged$obesity_percentage),]
 ```
@@ -253,12 +225,6 @@ merged <-merged[!is.na(merged$obesity_percentage),]
 #summary(merged$diabetes_percentage)
 #summary(merged$obesity_percentage)
 ```
-
-<br>
-
-## Add regions
-
-Last, I create a new column contain Northeast, Northwest, Southwest, and Southeast four different regions.
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}
 # Add regions
@@ -385,8 +351,6 @@ From the boxplot of diabetes percentage, there is a max diabetes percentage in t
 From the boxplot of obesity percentage, the east-side regions' median obesity percentage is also higher than the west-side regions'. Among all regions, the SE region has the highest median obesity percentage and the SW region has the lowest median obesity percentage.
 
 <br>
-
-
 
 ## Scatter plots {.tabset}
 
