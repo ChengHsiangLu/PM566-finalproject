@@ -64,7 +64,7 @@ dia <- read.socrata(
   password  = "Samuelsunny0325!"
 )
 dia <- as.data.table(dia)
-write.csv(dia,"dia.csv", row.names = F)
+write.csv(dia,"./data/dia.csv", row.names = F)
 ```
 
 ```{r API_obe, message=FALSE, echo=FALSE, warning=FALSE}
@@ -75,7 +75,7 @@ obe <- read.socrata(
   password  = "Samuelsunny0325!"
 )
 obe <- as.data.table(obe)
-write.csv(obe,"obe.csv", row.names = F)
+write.csv(obe,"./data/obe.csv", row.names = F)
 ```
 
 <br>
@@ -94,6 +94,7 @@ if (!file.exists("1-self-reported.csv"))
     timeout  = 60
   )
 physical_inactivity <- fread("1-self-reported.csv")
+write.csv(physical_inactivity,"./data/1-self-reported.csv", row.names = F)
 ```
 
 <br>
