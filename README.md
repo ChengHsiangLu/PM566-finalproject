@@ -6,11 +6,8 @@ By merging these three dataset, I create different interesting plots such as lea
 
 ## Links
 
-You can see my webpage with this link:
+You can see my webpage with this link: [Click here](https://rawcdn.githack.com/ChengHsiangLu/PM566-finalproject/fa11976d501625f98fd55c4397b2d011e7ac242d/index.html)
 
-[Click here](https://rawcdn.githack.com/ChengHsiangLu/PM566-finalproject/c52f4c022204605da71ab3879eebb125b496cb0d/index.html)
-
-Download PDF:
-[Download](https://github.com/ChengHsiangLu/PM566-finalproject/raw/main/index.pdf)
+Download PDF: [PDF](https://github.com/ChengHsiangLu/PM566-finalproject/raw/main/index.pdf)
 
 
