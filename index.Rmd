@@ -190,7 +190,9 @@ merged <-
     all.x = TRUE     
   ) 
 ```
-
+ 
+ <br>
+ 
 ## Remove duplicates
 
 ```{r message=FALSE, echo=FALSE, warning=FALSE}

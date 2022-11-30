@@ -1,4 +1,4 @@
-name: "my-website"
+name: "The correlation of diabetes and obesity with physical inactivity in the US in 2017"
 output_dir: "."
 navbar:
   title: "PM566 Final Project"
