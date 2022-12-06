@@ -17,8 +17,8 @@ Here are my datasets links:
 ```{r}
 dia <- read.socrata(
   "https://chronicdata.cdc.gov/resource/cn78-b9bj.json?year=2017",
-  app_token = "bEkVW73ASzmTkZ9riAtf2YS5c",
-  email     = "clu74108@usc.edu",
+  app_token = "your_token",
+  email     = "your_email",
   password  = "your_password"
 )
 dia <- as.data.table(dia)
@@ -28,8 +28,8 @@ write.csv(dia,"./data/dia.csv", row.names = F)
 ```{r}
 obe <- read.socrata(
   "https://chronicdata.cdc.gov/resource/bjvu-3y7d.json?year=2017",
-  app_token = "bEkVW73ASzmTkZ9riAtf2YS5c",
-  email     = "clu74108@usc.edu",
+  app_token = "your_token",
+  email     = "your_email",
   password  = "your_password"
 )
 obe <- as.data.table(obe)
